@@ -167,8 +167,8 @@ external_data/
 # 필요하면 Git LFS 사용
 # =========================================================
 
-models/
-model/
+# models/   # 터미널 앱 생성 시 models 모듈 패턴과 겹침.. 
+# model/    # 터미널 앱 생성 시 model 모듈 패턴과 겹칠 수 있음..
 checkpoints/
 checkpoint/
 ckpts/
