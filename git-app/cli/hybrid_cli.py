@@ -1,9 +1,12 @@
 # 시스템 종료 및 입출력을 다루기 위해 sys 모듈을 불러옴
 import sys
+
 # CommandDispatcher 커맨드 핸들러 클래스를 불러옴
 from cli.commands import CommandDispatcher
+
 # 한 줄 명령 파서 클래스를 불러옴
 from cli.parser import CommandParser
+
 
 
 # Mini Git REPL(Read-Eval-Print Loop) 하이브리드 대화형 쉘 엔진 클래스임
@@ -15,7 +18,8 @@ class HybridCLI:
 
     # 사용자의 입력을 한 줄 받아 실행하는 함수임
     def execute_line(self, line: str) -> bool:
-        # 한 줄 문자열을 명령어, 인자 리스트, 옵션 딕셔너리로 파싱함
+
+        # 🔥🔥 한 줄 문자열을 명령어, 인자 리스트, 옵션 딕셔너리로 파싱함
         action, args, options = CommandParser.parse_line(line)
 
         # 따옴표 문법 오류가 있으면 원래 뜻을 추측하지 않고 표준 오류를 출력함
@@ -43,11 +47,15 @@ class HybridCLI:
             # 처리 결과를 호출한 곳에 돌려주고 이 함수의 실행을 끝냄.
             return False
 
-        # 공통 입력 검사를 거쳐 알맞은 명령 담당자에게 넘김.
+        # 🔥🔥🔥🔥🔥 공통 입력 검사를 거쳐 알맞은 명령 담당자에게 넘김.
         self._dispatcher.dispatch(action, args, options)
+
         # 종료 명령이 아니므로 다음 입력을 기다림.
         return True
 
+
+
+    # ================================================================================
     # 프롬프트를 띄우고 무한 루프로 사용자 입력을 반복 처리하는 REPL 루프 실행 함수임
     def start_repl(self) -> None:
         # 사용자가 확인할 결과나 안내를 화면에 출력함.
@@ -59,8 +67,12 @@ class HybridCLI:
         # 사용자가 확인할 결과나 안내를 화면에 출력함.
         print("=" * 60)
 
+
+        # =====================================================
         # 종료 신호가 올 때까지 반복 실행함
         while True:
+
+
             # 중단 신호나 오류가 날 수 있는 작업을 시도함.
             try:
                 # 프롬프트를 출력하고 한 줄 입력을 받음
@@ -71,12 +83,16 @@ class HybridCLI:
                 if not keep_running:
                     # 이 반복을 끝내고 반복문 다음으로 이동함.
                     break
+
+
             # 지정한 오류나 중단 신호가 발생했을 때 아래에서 처리함.
             except (KeyboardInterrupt, EOFError):
                 # Ctrl+C 또는 Ctrl+D 인터럽트 발생 시 안전하게 종료함
                 print("\nMini Git을 종료합니다.")
                 # 이 반복을 끝내고 반복문 다음으로 이동함.
                 break
+
+
             # 지정한 오류나 중단 신호가 발생했을 때 아래에서 처리함.
             except Exception:
                 # 예기치 않은 오류 발생 시 프로그램이 튕기지 않도록 방어함
