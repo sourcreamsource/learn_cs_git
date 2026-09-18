@@ -3,6 +3,7 @@ HELP_TEXT = """
 ================= 🟩 [Mini Git] 사용 가능한 명령어 목록 🟩 =================
   INIT <user_name>               : 저장소 초기화 (main 브랜치 및 작성자 설정)
   BRANCH <branch_name>           : 현재 커밋에서 새 브랜치 생성
+  BRANCH LIST                    : 브랜치 목록 조회 (* = 현재 브랜치, LIST는 조회용 단어)
   SWITCH <branch_name>           : 지정한 브랜치로 HEAD 전환
   COMMIT <message>               : 현재 브랜치에 변경사항 커밋
   LOG                            : 부모가 먼저 출력되는 위상 정렬 커밋 이력 조회

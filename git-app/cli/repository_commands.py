@@ -1,5 +1,6 @@
 from cli.interactive import InteractiveHandler  # 생략된 인자를 질문하는 도구임.
 from cli.presenter import show_created_commit  # 커밋 생성 결과의 공통 출력 함수임.
+from constants.messages import ERROR_NOT_INITIALIZED  # 초기화 전에 조회하면 보여 줄 오류임.
 from services.git_service import GitService  # 저장소·브랜치·커밋 기능을 실행함.
 
 
@@ -22,7 +23,16 @@ class RepositoryCommands:
         print(f"Current branch: {result['branch']}")  # 새 기본 브랜치를 보여 줌.
         print(f"Current user: {result['author']}")  # 현재 작성자를 보여 줌.
 
-    def handle_branch(self, args: list[str], options: dict[str, str]) -> None:  # 새 브랜치를 만듦.
+    def handle_branch(self, args: list[str], options: dict[str, str]) -> None:  # 브랜치를 생성하거나 목록을 조회함.
+        if args and args[0].lower() == "list":  # list는 대소문자에 관계없이 목록 조회로 처리함.
+            if not self._git.is_initialized():  # 조회할 저장소가 준비되었는지 확인함.
+                print(ERROR_NOT_INITIALIZED)  # 먼저 INIT을 실행하라고 알려 줌.
+                return  # 초기화 전에는 목록을 출력하지 않음.
+            current = self._git.get_current_branch()  # 현재 선택한 브랜치를 확인함.
+            for name in self._git.list_branches():  # 생성된 순서대로 브랜치 이름을 꺼냄.
+                marker = "*" if name == current else " "  # 현재 브랜치에만 별표를 붙임.
+                print(f"{marker} {name}")  # 표시와 이름을 한 줄에 출력함.
+            return  # 조회 후 새 브랜치를 생성하지 않음.
         branch = InteractiveHandler.ask_branch(args)  # 새 브랜치 이름을 받음.
         if not branch:  # 사용자가 이름 입력을 취소했는지 확인함.
             print("Invalid args: branch name is required")  # 브랜치 이름이 필요함을 알림.

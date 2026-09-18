@@ -75,6 +75,9 @@ class GitService:
         commit = self._writer.create(branch, cleaned_message, author, parents)  # 공통 저장 절차를 실행함.
         return True, commit, branch  # 새 커밋과 저장한 브랜치를 반환함.
 
+    def list_branches(self) -> list[str]:  # 생성된 순서대로 브랜치 이름 목록을 조회함.
+        return list(self._branch_repo.get_all_branches())  # 복사한 이름 목록만 반환하여 원본 상태를 보호함.
+
     def get_current_branch(self) -> str | None:  # 현재 선택된 가지를 조회함.
         return self._branch_repo.get_head()  # 브랜치 저장소의 HEAD 값을 반환함.
 
