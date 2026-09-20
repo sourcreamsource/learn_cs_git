@@ -1,4 +1,4 @@
-from graph.topological import topological_sort  # 부모 우선 정렬을 그래프 검증에도 재사용함.
+from graph.topological_sort import topological_sort  # 부모 우선 정렬을 그래프 검증에도 재사용함.
 from models.commit import Commit  # 검사할 커밋 자료형임.
 
 

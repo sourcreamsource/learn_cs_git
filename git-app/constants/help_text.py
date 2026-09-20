@@ -9,7 +9,7 @@ HELP_TEXT = """
   LOG                            : 부모가 먼저 출력되는 위상 정렬 커밋 이력 조회
   LOG --sort-by=date|author      : 날짜순 또는 작성자순으로 정렬된 커밋 이력 조회
   PATH <commit1> <commit2>       : 두 커밋 간의 무방향 BFS 최단 경로 탐색
-  PATH <commit1> <commit2> --directed : 부모 방향으로만 탐색하는 평가 연습
+  PATH <commit1> <commit2> --directed : 부모 방향으로만 탐색하는 경로 탐색
   ANCESTORS <commit_hash>        : 특정 커밋의 모든 조상 커밋 탐색
   SEARCH <keyword>               : 키워드로 커밋 메시지 역색인 검색
   SEARCH --author=<name>         : 작성자로 커밋 역색인 검색

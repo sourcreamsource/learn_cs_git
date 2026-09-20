@@ -1,3 +1,7 @@
+# cil/presenter.py
+# 계산이나 데이터 처리를 하지 않고, 프로그램이 처리한 결과 데이터를 터미널 화면에 예쁘게 포장해서 출력(Print)만 전담하는 **"화면 표시 전담 직원"**이다.
+
+
 from models.commit import Commit  # 출력할 커밋의 자료형을 불러옴.
 from constants.messages import MSG_NO_COMMITS_FOUND, MSG_NO_COMMITS_YET, MSG_NO_PATH  # 빈 결과 안내를 재사용함.
 

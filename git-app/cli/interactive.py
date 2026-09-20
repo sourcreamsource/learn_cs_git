@@ -3,11 +3,14 @@ from constants.git_constants import DEFAULT_PROMPT_AUTHOR  # INIT 질문의 기�
 
 # 이미 받은 인자는 유지하고 빠진 값만 질문하는 대화형 입력 도구임.
 class InteractiveHandler:
+
+
+
     @staticmethod  # 질문 하나에는 별도 객체 상태가 필요하지 않음.
     def prompt_input(prompt_text: str, default: str = "") -> str:  # 질문·기본값·취소 처리를 한곳에 모음.
-        display = f"? {prompt_text}: "  # 기본값 없는 질문 문구를 만듦.
+        display = f"▶️ {prompt_text}: "  # 기본값 없는 질문 문구를 만듦.
         if default:  # 기본값이 있으면 사용자가 볼 수 있게 표시함.
-            display = f"? {prompt_text} [{default}]: "  # 기본값을 대괄호에 넣음.
+            display = f"▶️ {prompt_text} [{default}]: "  # 기본값을 대괄호에 넣음.
         try:  # 입력 도중 취소도 정상 흐름으로 다룸.
             answer = input(display).strip()  # 답변 양끝의 공백을 정리함.
             if not answer and default:  # 답 없이 엔터를 누르면 기본값을 사용함.
@@ -15,6 +18,9 @@ class InteractiveHandler:
             return answer  # 직접 입력한 답을 반환함.
         except (EOFError, KeyboardInterrupt):  # 입력 종료 또는 Ctrl+C를 받았는지 확인함.
             return ""  # 명령 담당자가 빈 입력으로 처리하도록 함.
+
+
+
 
     @classmethod  # 공통 질문 함수에서 같은 클래스의 prompt_input을 사용함.
     def _ask_one(cls, args: list[str], title: str, prompt: str, default: str = "") -> str | None:  # 값 하나를 받음.
@@ -40,6 +46,9 @@ class InteractiveHandler:
         if not second:  # 두 번째 값이 빠진 경우에만 질문함.
             second = cls.prompt_input(second_prompt)  # 두 번째 값을 질문함.
         return first, second  # 받았거나 취소된 두 값을 그대로 전달함.
+
+
+
 
     @classmethod  # 기존 명령별 호출 이름을 유지함.
     def ask_init(cls, existing_args: list[str]) -> str | None:  # 저장소 작성자를 질문함.

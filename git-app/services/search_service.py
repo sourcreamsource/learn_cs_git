@@ -35,15 +35,32 @@ class SearchService:
         hashes = self._index.search_by_author(author)  # 대소문자를 통일한 이름으로 번호를 찾음.
         return self._find_commits(hashes)  # 같은 결과 변환 절차를 사용함.
 
+
+    # ✅
     def get_sorted_log(self, sort_by: str = "date") -> tuple[bool, list[Commit] | None, str]:  # 날짜·작성자순 로그를 반환함.
+    
+        # 1. 옵션 정제
         valid, option = InputValidator.validate_sort_option(sort_by)  # 자료를 꺼내기 전에 옵션을 검사함.
+        
+        # 2. 정제 실패 시 에러 처리
         if not valid:  # 지원하지 않는 정렬 기준을 거부함.
             return False, None, option  # 검증기가 만든 오류 문구를 반환함.
+        
+        # 3. 전체 커밋 가져오기
         commits = self._commit_repo.find_all()  # 로그에는 전체 커밋이 필요함.
+        
+        # 4. 전체 커밋이 없는 경우
         if not commits:  # 초기화 직후처럼 기록이 없는 경우임.
             return True, [], "Empty commits"  # 정상적인 빈 결과를 반환함.
+        
+        # 5. 날짜 정렬 기준 설정
         key_function = self._get_timestamp  # 기본은 날짜순임.
+        
+        # 6. 작성자 정렬을 요청한 경우
         if option == "author":  # 작성자 정렬을 요청한 경우임.
             key_function = self._get_normalized_author  # 비교값을 꺼내는 함수만 바꿈.
+        
+        # 7. 정렬 수행
         result = merge_sort(commits, key=key_function)  # 두 기준이 같은 정렬 알고리즘을 사용함.
+        
         return True, result, f"Sorted by {option}"  # 정렬된 목록과 사용한 기준을 반환함.

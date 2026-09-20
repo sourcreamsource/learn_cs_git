@@ -1,3 +1,5 @@
+# inverted_index.py — 역색인 클래스 구현
+
 # 타입 힌트를 위해 Dict, List를 불러옴
 from typing import Dict, List
 
@@ -6,23 +8,62 @@ from typing import Dict, List
 class InvertedIndex:
     # 키워드 색인과 작성자 색인 딕셔너리를 초기화하는 생성자 함수임
     def __init__(self) -> None:
+        
+        # ✅ 키워드 색인 
         # 단어(토큰)를 키로 하고 커밋 번호 사전을 값으로 갖는 역색인 맵임 (예: {"login": {"a1b2c3": None}})
         self._keyword_index: Dict[str, Dict[str, None]] = {}
+        
+        # ```python
+        # ❤️ 구조: {단어: [커밋해시들]}
+        # keyword_index = {
+        #     "로그인": ["a1b2c3", "d4e5f6"],
+        #     "기능": ["a1b2c3", "g7h8i9"],
+        #     "버튼": ["d4e5f6"],
+        #     "추가": ["a1b2c3", "g7h8i9", "j1k2l3"],
+        # }
+
+        # ❤️ 검색: O(1) 조회
+        # def search_keyword(index, word):
+        #     return index.get(word.lower(), [])
+        # ```                
+        
+
+        # ✅ 작성자 색인
         # 작성자 이름을 키로 하고 커밋 번호 사전을 값으로 갖는 역색인 맵임 (예: {"alice": {"a1b2c3": None}})
         self._author_index: Dict[str, Dict[str, None]] = {}
+        
+        # ```python
+        # ❤️ 구조: {작성자: [커밋해시들]}  
+        # author_index = {  
+        #     "홍길동": ["a1b2c3", "d4e5f6", "g7h8i9"],  
+        #     "김철수": ["j1k2l3", "m4n5o6"],  
+        # }  
 
-    # 커밋 메시지에서 단어를 추출하여 소문자로 정규화하는 헬퍼 함수임
+        # ❤️ 검색: O(1) 조회  
+        # def search_author(index, name):  
+        #     return index.get(name, [])  
+        # ```
+
+
+
+    # ✅ 커밋 메시지에서 단어를 추출하여 소문자로 정규화하는 헬퍼 함수
     def tokenize(self, text: str) -> List[str]:
+        
         # 문자열 양쪽 공백을 제거하고 모두 소문자로 변환함
         normalized = text.strip().lower()
+        
         # 공백 문자를 기준으로 문자열을 단어 단위로 쪼개어 리스트로 만듦
         tokens = normalized.split()
         # 정규화된 단어 토큰 리스트를 반환함
+        
         return tokens
 
+
+    # ✅ 커밋 즉시 바로 키워드 및 작성자 역색인 추가
     # 새로운 커밋이 생성될 때 역색인에 즉시 등록하는 갱신 함수임 (평가항목 2, 3: 실시간 동기화)
     def add_commit(self, commit_hash: str, message: str, author: str) -> None:
-        # 1. 작성자 색인 갱신: 대소문자를 통일하여 어떤 입력 형태도 같은 서랍에서 찾게 함
+        
+        # ❤️  1. 작성자 색인 갱신: 대소문자를 통일하여 어떤 입력 형태도 같은 서랍에서 찾게 함
         cleaned_author = author.strip().lower()
         # 해당 작성자가 색인 맵에 아직 등록되지 않았다면 빈 사전을 만듦
         if cleaned_author not in self._author_index:
@@ -33,7 +74,7 @@ class InvertedIndex:
             # 다른 메서드에서도 사용할 수 있도록 객체 안에 보관함.
             self._author_index[cleaned_author][commit_hash] = None
 
-        # 2. 키워드 색인 갱신: 메시지에서 소문자 단어 토큰들을 추출함
+        # ❤️ 2. 키워드 색인 갱신: 메시지에서 소문자 단어 토큰들을 추출함
         tokens = self.tokenize(message)
         # 추출한 각 단어를 순회함
         for token in tokens:
@@ -46,6 +87,8 @@ class InvertedIndex:
                 # 다른 메서드에서도 사용할 수 있도록 객체 안에 보관함.
                 self._keyword_index[token][commit_hash] = None
 
+
+    # ✅ ❤️ 키워드 역색인 검색
     # 단어 후보를 평균 O(1)에 찾고 결과 K개를 꺼내는 함수임
     def search_by_keyword(self, keyword: str) -> List[str]:
         # 검색어를 커밋 메시지와 같은 규칙으로 단어 목록으로 나눔
@@ -93,6 +136,8 @@ class InvertedIndex:
         # 원본 색인 목록을 건드리지 않는 새 결과 목록을 반환함
         return matched_hashes
 
+
+    # ✅ ❤️ 작성자 역색인 검색
     # 작성자 후보를 평균 O(1)에 찾고 K개 번호를 복사하는 함수임
     def search_by_author(self, author: str) -> List[str]:
         # 검색할 작성자 이름을 등록할 때와 같은 규칙으로 소문자 정규화함
@@ -100,6 +145,9 @@ class InvertedIndex:
         # 작성자 이름을 키로 즉시 색인 목록의 복사본을 반환하며 없으면 빈 목록을 반환함
         return list(self._author_index.get(cleaned_author, []))
 
+
+
+    # ✅ 
     # 역색인 내의 모든 데이터를 비우는 함수임
     def clear(self) -> None:
         # 키워드 색인 맵 비우기

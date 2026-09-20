@@ -1,11 +1,13 @@
 # 시스템 종료 및 입출력을 다루기 위해 sys 모듈을 불러옴
 import sys
 
+# 한 줄 명령 파서 클래스를 불러옴
+from cli.parser import CommandParser
+
 # CommandDispatcher 커맨드 핸들러 클래스를 불러옴
 from cli.commands import CommandDispatcher
 
-# 한 줄 명령 파서 클래스를 불러옴
-from cli.parser import CommandParser
+
 
 
 
@@ -19,7 +21,7 @@ class HybridCLI:
     # 사용자의 입력을 한 줄 받아 실행하는 함수임
     def execute_line(self, line: str) -> bool:
 
-        # 🔥🔥 한 줄 문자열을 명령어, 인자 리스트, 옵션 딕셔너리로 파싱함
+        # 🔥🔥🔥🔥🔥 한 줄 문자열을 명령어, 인자 리스트, 옵션 딕셔너리로 파싱함
         action, args, options = CommandParser.parse_line(line)
 
         # 따옴표 문법 오류가 있으면 원래 뜻을 추측하지 않고 표준 오류를 출력함
@@ -56,7 +58,7 @@ class HybridCLI:
 
 
     # ================================================================================
-    # 프롬프트를 띄우고 무한 루프로 사용자 입력을 반복 처리하는 REPL 루프 실행 함수임
+    # ✅ 시작점 - 프롬프트를 띄우고 무한 루프로 사용자 입력을 반복 처리하는 REPL 루프 실행 함수임
     def start_repl(self) -> None:
         # 사용자가 확인할 결과나 안내를 화면에 출력함.
         print("\n")
@@ -77,8 +79,10 @@ class HybridCLI:
             try:
                 # 프롬프트를 출력하고 한 줄 입력을 받음
                 user_input = input("mini-git> ")
+
                 # 명령 실행 및 종료 여부 확인
                 keep_running = self.execute_line(user_input)
+                
                 # 조건이 맞는 경우에만 아래 처리를 실행함.
                 if not keep_running:
                     # 이 반복을 끝내고 반복문 다음으로 이동함.
