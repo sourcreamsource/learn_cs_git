@@ -7,6 +7,14 @@ from typing import Dict, List, Optional, Tuple
 # 사용자가 터미널에 입력한 한 줄 문자열을 파싱하는 클래스임 (대소문자 무시, 따옴표 지원, 옵션 분리)
 class CommandParser:
     # 한 줄의 명령 문자열을 (명령어, 위치인자리스트, 옵션딕셔너리) 튜플로 파싱하는 함수임
+    
+    # [ @staticmethod 정적 메서드 데코레이터 설명 ]
+    # 1. 역할: 객체(인스턴스)를 따로 만들지 않고도, 클래스 이름에서 바로 함수를 호출할 수 있게 해 줌.
+    #    - 일반 메서드: parser = CommandParser() 로 객체를 만든 뒤 parser.parse_line(line) 호출
+    #    - 정적 메서드: CommandParser.parse_line(line) 처럼 객체 생성 없이 클래스 이름으로 바로 호출 가능
+    # 2. self가 필요 없는 이유:
+    #    - 일반 메서드는 클래스 내부의 저장된 데이터(변수)를 다루기 위해 첫 번째 인자로 'self'를 받음.
+    #    - 하지만 parse_line은 내부 데이터를 전혀 만지지 않고, 오직 전달받은 'line' 문자열만 분석하는 독립적인 도구(유틸리티) 함수이므로 self가 필요 없음.
     @staticmethod
     # 아래 작업을 이름으로 다시 호출할 수 있게 함수로 정의함.
     def parse_line(
@@ -14,9 +22,12 @@ class CommandParser:
         line: str,
     # 앞에서 여러 줄로 적은 값이나 설정의 묶음을 마무리함.
     ) -> Tuple[Optional[str], List[str], Dict[str, str]]:
+
+
         # 문자열 앞뒤 공백을 제거함
         cleaned = line.strip()
         # 입력이 비어있는 경우 모두 빈 값으로 반환함
+        
         if not cleaned:
             # 처리 결과를 호출한 곳에 돌려주고 이 함수의 실행을 끝냄.
             return None, [], {}
@@ -40,19 +51,25 @@ class CommandParser:
 
         # 위치 인자들을 담을 리스트임
         args: List[str] = []
+        
         # --key=value 형태의 옵션들을 담을 딕셔너리임
         options: Dict[str, str] = {}
+        
         # -- 뒤의 글자는 옵션처럼 보여도 일반 인자로 읽음.
         options_finished = False
 
+        
+        
         # 두 번째 토큰부터 순회하며 옵션과 인자를 분류함
         for token in tokens[1:]:
+
             # '--'로 시작하는 옵션 플래그인 경우
             if token == "--" and not options_finished:
                 # 옵션 해석을 여기서 끝냄.
                 options_finished = True
                 # 구분자 자체는 인자로 넣지 않음.
                 continue
+            
             # 구분자 앞의 --이름만 옵션으로 읽음.
             if token.startswith("--") and not options_finished:
                 # '--' 접두사를 제거함
@@ -77,6 +94,7 @@ class CommandParser:
                     return None, [], {"parse-error": "empty or duplicate option"}
                 # shlex가 문법용 따옴표를 처리했으므로 내용은 그대로 보관함.
                 options[key] = val
+            
             # 앞의 조건에 해당하지 않는 나머지 경우를 처리함.
             else:
                 # 메시지 내용에 포함된 따옴표도 그대로 보관함.
