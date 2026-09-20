@@ -7,6 +7,12 @@ from models.commit import Commit
 
 # 커밋 노드들을 해시맵(딕셔너리)에 저장하고 O(1) 속도로 조회하는 저장소 클래스임
 class CommitRepository:
+    """해시 문자열을 키, Commit 객체를 값으로 보관하는 메모리 저장소다.
+
+    브랜치 상태와 검색 색인은 다른 객체가 담당한다.
+    딕셔너리 단건 조회는 평균 O(1)이며 항상 O(1)인 것은 아니다.
+    같은 키의 대입은 원래 덮어쓰므로 save에서 중복을 명시적으로 막는다.
+    """
     # 커밋 해시맵 저장소를 초기화하는 생성자 함수임
     def __init__(self) -> None:
         # 커밋 해시 문자열을 키로 하고 Commit 객체를 값으로 갖는 해시맵임 (평가항목 2, 3: O(1) 조회 보장)
@@ -48,6 +54,13 @@ class CommitRepository:
     def save(self, commit: Commit) -> None:
         
         # 같은 해시로 기존 역사를 덮어쓰지 못하게 함.
+        """커밋을 검사한 뒤 해시별 저장소에 추가한다.
+
+        입력 commit의 해시가 중복되거나 부모가 저장소에 없으면 ValueError다.
+        정상 완료 시 반환값은 None이며 기존 커밋을 덮어쓰지 않는다.
+        새 커밋이 기존 부모만 참조하게 하여 정상 추가
+        과정에서 순환을 막는다. 저장 후 객체의 외부 변경까지 막지는 않는다.
+        """
         if commit.hash in self._commits:
             # 이미 쓰고 있는 번호라고 알림.
             raise ValueError(f"Duplicate commit: {commit.hash}")
@@ -65,6 +78,11 @@ class CommitRepository:
     # 커밋 해시로 특정 커밋 노드를 O(1) 시간복잡도로 단건 조회하는 함수임
     def find_by_hash(self, commit_hash: str) -> Optional[Commit]:
         # 해시맵에서 해당 해시의 커밋을 찾아 반환하며, 없으면 None을 반환함
+        """해시로 커밋 하나를 평균 O(1)에 조회한다.
+
+        없으면 None, 있으면 저장된 Commit 객체 자체를 반환한다.
+        복제본이 아니므로 반환된 객체를 수정하면 저장소에서도 보인다.
+        """
         return self._commits.get(commit_hash)
 
     # 저장소에 등록된 모든 커밋 객체들의 리스트를 반환하는 함수임

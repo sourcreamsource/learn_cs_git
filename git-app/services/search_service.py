@@ -7,6 +7,11 @@ from validators.input_validator import InputValidator  # 날짜·작성자 옵�
 
 # 검색 후보를 실제 커밋으로 바꾸고, 로그의 정렬 기준을 선택함.
 class SearchService:
+    """색인으로 검색하고 날짜·작성자 기준 로그 정렬을 담당한다.
+
+    색인은 후보 해시만 주고 저장소는 실제 Commit을 준다.
+    부모 관계를 지키는 LOG는 GraphService의 별도 책임이다.
+    """
     def __init__(self, commit_repo: CommitRepository, inverted_index: InvertedIndex) -> None:  # 필요한 두 보관함을 받음.
         self._commit_repo = commit_repo  # 커밋을 번호로 찾을 저장소임.
         self._index = inverted_index  # 검색 후보만 꺼낼 색인임.
@@ -20,6 +25,11 @@ class SearchService:
         return commit.author.lower()  # 대소문자를 통일해 이름순으로 비교함.
 
     def _find_commits(self, hashes: list[str]) -> list[Commit]:  # 두 검색 방식의 결과 변환을 공유함.
+        """색인에서 받은 해시만 조회하여 실제 커밋 목록으로 바꾼다.
+
+        전체 저장소 순회 없이 후보 K개를 평균 O(K)에 조회한다.
+        없는 해시는 건너뛰며 나머지는 전달된 해시 순서를 유지한다.
+        """
         result = []  # 색인에서 찾은 커밋만 모을 바구니임.
         for commit_hash in hashes:  # 전체 저장소 대신 후보 번호만 읽음.
             commit = self._commit_repo.find_by_hash(commit_hash)  # 해시맵으로 커밋을 조회함.
@@ -27,6 +37,11 @@ class SearchService:
                 result.append(commit)  # 색인의 등록 순서대로 결과에 넣음.
         return result  # 후보 K개를 조회한 결과를 반환함.
 
+
+
+
+    # ------------------------------------------------------------------------------------------------
+    # ✅
     def search_by_keyword(self, keyword: str) -> list[Commit]:  # 메시지의 단어 색인을 사용함.
         hashes = self._index.search_by_keyword(keyword)  # 여러 단어이면 공통 후보를 찾음.
         return self._find_commits(hashes)  # 찾은 번호들만 실제 커밋으로 바꿈.
@@ -36,10 +51,21 @@ class SearchService:
         return self._find_commits(hashes)  # 같은 결과 변환 절차를 사용함.
 
 
+
+
+    # ------------------------------------------------------------------------------------------------
     # ✅
     def get_sorted_log(self, sort_by: str = "date") -> tuple[bool, list[Commit] | None, str]:  # 날짜·작성자순 로그를 반환함.
     
         # 1. 옵션 정제
+        """전체 커밋을 date 또는 author 기준으로 안정 병합 정렬한다.
+
+        반환값은 (성공 여부, 목록 또는 None, 안내 문구)다.
+        잘못된 기준이면 실패하고 빈 저장소는 정상적인 빈 목록이다.
+        날짜는 고정 형식 문자열, 작성자는 소문자 이름으로 비교한다.
+        부모 선후관계까지 보장하는 함수가 아니다.
+        부모 순서도 유지하려면 준비된 후보만 비교하는 우선순위 위상 정렬을 쓴다.
+        """
         valid, option = InputValidator.validate_sort_option(sort_by)  # 자료를 꺼내기 전에 옵션을 검사함.
         
         # 2. 정제 실패 시 에러 처리

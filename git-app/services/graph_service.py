@@ -9,6 +9,11 @@ from repositories.commit_repository import CommitRepository  # 조회할 모든 
 
 # 저장소 자료를 그래프 알고리즘에 전달하고 조회 오류를 정리함.
 class GraphService:
+    """저장소의 커밋을 그래프 함수에 전달하고 조회 결과를 정리한다.
+
+    알고리즘은 GraphTraversal, 데이터 보관은 저장소,
+    화면 출력은 명령 화면에 맡긴다. LOG·PATH·ANCESTORS의 연결 담당이다.
+    """
                     # 이미 default로 이미 다 들어가서 class 가져다 쓸 때 인자 전달이 필요없다.
     def __init__(self, commit_repo: CommitRepository, branch_repo: BranchRepository) -> None:  # 필요한 저장소를 받음.
         self._commit_repo = commit_repo  # 탐색할 커밋이 있는 보관함임.
@@ -17,6 +22,12 @@ class GraphService:
     # ✅ 
     # 그래프 알고리즘에 넘길 해시별 지도를 구성
     def _get_commits_dict(self) -> dict[str, Commit]:  
+        """전체 커밋을 해시로 조회할 수 있는 새 사전을 만든다.
+
+        매 호출마다 커밋 N개를 읽어 시간·추가 공간 O(N)이 든다.
+        사전만 새로 만들며 안의 Commit 객체는 공유하는 얕은 복사다.
+        따라서 커밋 객체 자체의 외부 변경까지 막는 복사는 아니다.
+        """
         commits = {}  # 커밋 번호로 부모를 바로 찾을 수 있는 사전임.
         
         for commit in self._commit_repo.find_all():  # 현재 저장된 기록을 하나씩 읽음.
@@ -65,6 +76,12 @@ class GraphService:
     # _get_commits_dict 함수를 사용
     def get_topological_log(self) -> list[tuple[Commit, list[str]]]:            # 부모 우선 로그에 브랜치 이름을 붙임.
         
+        """전체 커밋을 부모 우선으로 정렬하고 브랜치 이름표를 붙인다.
+
+        반환값은 (Commit, 브랜치 이름 목록)의 목록이다.
+        현재 브랜치의 조상만이 아니라 저장된 모든 커밋을 대상으로 한다.
+        부모 누락이나 순환이 있으면 위상 정렬의 ValueError가 전달된다.
+        """
         commits = GraphTraversal.topological_sort(self._get_commits_dict())     # 부모가 먼저인 순서를 구함.
         
         labels = {}  # 커밋 번호별로 표시할 브랜치 이름들을 모음.
@@ -83,9 +100,17 @@ class GraphService:
         return result                                   # 출력 형식 결정은 CLI에 맡김.
 
 
-    # ✅ 
+    # ✅ 🔥🔥🔥🔥🔥
     # 커밋 번호의 존재를 확인한 뒤 선택한 방향의 최단 경로를 요청함.
     def get_shortest_path(self, commit1: str, commit2: str, directed: bool = False) -> tuple[bool, list[str] | None, str]:
+        """해시 존재를 검사한 뒤 방향 설정에 맞는 최단 경로를 조회한다.
+
+        반환값은 (성공 여부, 경로 또는 None, 문구)다.
+        없는 해시는 (False, None, Unknown commit 문구),
+        연결이 없으면 (True, None, No path)다.
+        directed=False는 양방향, True는 자식에서 부모 방향이다.
+        그래프 내부의 부모 누락으로 생긴 ValueError는 그대로 전달될 수 있다.
+        """
         commits = self._get_commits_dict()  # 현재 그래프를 준비함.
         
         if commit1 not in commits:  # 시작 번호 자체가 존재하는지 확인함.
@@ -102,8 +127,14 @@ class GraphService:
         return True, path, "Path found"  # 발견한 경로를 반환함.
 
 
-    # ✅ 
+    # ✅ 🔥🔥🔥🔥🔥
     def get_ancestors(self, commit_hash: str) -> tuple[bool, list[str] | None, str]:  # 대상 커밋의 모든 조상을 찾음.
+        """대상 해시를 검사하고 모든 조상 목록을 반환한다.
+
+        정상 결과는 (True, 조상 목록, Ancestors found)다.
+        부모 없는 루트의 조상은 빈 목록이며 정상 결과다.
+        없는 대상은 (False, None, Unknown commit 문구)로 구분한다.
+        """
         commits = self._get_commits_dict()  # 현재 부모 관계를 준비함.
         
         if commit_hash not in commits:  # 대상 번호를 먼저 확인함.

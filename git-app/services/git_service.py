@@ -11,6 +11,11 @@ from validators.input_validator import InputValidator  # 이름과 메시지의 
 
 # 저장소 초기화·브랜치 전환·일반 커밋의 작업 규칙을 결정함.
 class GitService:
+    """INIT, BRANCH, SWITCH, COMMIT의 입력과 작업 순서를 관리한다.
+
+    상태는 저장소에, 실제 기록 절차는 CommitWriter에 맡긴다.
+    화면 출력 대신 성공 여부와 결과를 반환하여 명령 화면과 분리한다.
+    """
     def __init__(  # 필요한 저장 도구들을 전달받음.
         self,  # 생성하는 저장소 서비스임.
         commit_repo: CommitRepository,  # 커밋 보관함임.
@@ -27,6 +32,13 @@ class GitService:
         self._writer = CommitWriter(commit_repo, branch_repo, inverted_index, hash_generator)  # 공통 저장 담당자를 연결함.
 
     def init_repository(self, author: str) -> dict[str, str]:  # 이름을 검사한 뒤 새 저장소 상태로 초기화함.
+        """작성자를 먼저 검사하고 커밋·색인·브랜치 상태를 초기화한다.
+
+        빈 이름은 ValueError이며 기존 자료를 비우지 않는다.
+        유효한 입력이면 이전 커밋과 색인을 지우고 main과 HEAD를 준비한다.
+        반환값은 branch와 author를 담은 사전이다.
+        공유 HashGenerator의 세션 발급 이력은 여기서 지우지 않는다.
+        """
         valid, cleaned_author = InputValidator.validate_author(author)  # 공백 이름을 먼저 검사함.
         if not valid:  # 잘못된 입력은 기존 자료를 보존해야 함.
             raise ValueError(cleaned_author)  # 데이터 삭제 전에 입력 오류를 알림.
@@ -36,6 +48,12 @@ class GitService:
         return {"branch": DEFAULT_BRANCH, "author": cleaned_author}  # 화면에 알려 줄 초기화 결과임.
 
     def create_branch(self, branch_name: str) -> tuple[bool, str]:  # 현재 커밋을 가리키는 새 가지를 만듦.
+        """현재 커밋을 가리키는 새 브랜치 이름표를 만든다.
+
+        입력은 브랜치 이름, 반환값은 (성공 여부, 안내 문구)다.
+        초기화 전, 잘못된 이름, 중복 이름은 실패하며 기존 가지를 유지한다.
+        커밋을 복사하지 않고 HEAD도 이동하지 않는다. 이동은 SWITCH의 역할이다.
+        """
         if not self.is_initialized():  # 아직 INIT을 실행하지 않았는지 확인함.
             return False, ERROR_NOT_INITIALIZED  # 초기화부터 필요하다고 알림.
         valid, name = InputValidator.validate_branch_name(branch_name)  # 빈 이름과 공백을 검사함.
@@ -48,6 +66,12 @@ class GitService:
         return True, f"Created branch: {name}"  # 생성된 가지 이름을 알림.
 
     def switch_branch(self, branch_name: str) -> tuple[bool, str]:  # HEAD가 가리키는 브랜치를 바꿈.
+        """검사한 브랜치로 HEAD를 이동한다.
+
+        (성공 여부, 안내 문구)를 반환한다.
+        초기화 전이거나 이름이 잘못되었거나 존재하지 않으면 실패한다.
+        다음 COMMIT은 이동한 브랜치의 최신 커밋을 부모로 사용한다.
+        """
         if not self.is_initialized():  # 브랜치를 사용하기 전에 초기화가 필요함.
             return False, ERROR_NOT_INITIALIZED  # 초기화 오류를 반환함.
         valid, name = InputValidator.validate_branch_name(branch_name)  # 이름의 모양을 검사함.
@@ -59,6 +83,13 @@ class GitService:
         return True, f"Switched to branch: {name}"  # 이동 결과를 반환함.
 
     def create_commit(self, message: str) -> tuple[bool, Commit | None, str]:  # 일반 커밋의 작성자와 부모를 결정함.
+        """현재 브랜치와 작성자로 새 커밋을 만든다.
+
+        현재 최신 커밋을 부모로 정한 뒤 CommitWriter에 맡긴다.
+        첫 기록은 부모가 없다. 성공은 (True, 커밋, 브랜치 이름),
+        입력·상태 검사 실패는 (False, None, 오류 문구)를 반환한다.
+        저장 과정의 예외를 모두 이 튜플로 변환하는 함수는 아니다.
+        """
         if not self.is_initialized():  # 저장소가 먼저 준비되어 있어야 함.
             return False, None, ERROR_NOT_INITIALIZED  # 초기화 오류를 반환함.
         valid, cleaned_message = InputValidator.validate_commit_message(message)  # 비어 있는 메시지를 검사함.

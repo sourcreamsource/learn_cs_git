@@ -16,6 +16,14 @@ def create_current_timestamp() -> str:
 @dataclass
 # 준비한 값으로 이 단계의 작업을 실행함.
 class Commit:
+    """커밋 한 개의 내용과 부모 관계를 보관하는 데이터 클래스다.
+
+    hash는 식별자, message는 설명, author는 작성자,
+    timestamp는 생성 시각, parents는 부모 해시 목록이다.
+    첫 커밋의 부모는 없고 일반 커밋은 보통 하나, 병합 커밋은 둘이다.
+    저장이나 검색은 맡지 않는다. parents는 변경 가능한 목록이므로
+    이 클래스 자체가 그래프의 무사이클 조건을 보장하지는 않는다.
+    """
     # 커밋의 고유한 식별자 해시 문자열임 (예: a1b2c3)
     hash: str
     # 커밋에 대한 설명 메시지 문자열임 (예: Initial commit)

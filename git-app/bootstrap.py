@@ -37,6 +37,13 @@ from utils.hash_generator import HashGenerator  # 이 앱 세션에서 쓸 번�
 
 # 앱 부품은 여기서 한 번 만들고 필요한 서비스에 같은 객체를 전달함.
 def create_app() -> HybridCLI:
+    """공유 저장소와 서비스를 연결하고 실행 가능한 입력 화면을 반환한다.
+
+    커밋·브랜치·색인·해시 생성기를 한 번씩 만들어
+    필요한 서비스에 같은 객체를 전달한다. 일반 커밋과 병합도
+    동일한 기록과 해시 발급 이력을 사용한다.
+    반환된 HybridCLI의 실행은 호출자가 맡는다.
+    """
     commits = CommitRepository()  # 모든 서비스가 공유할 커밋 보관함임.
     
     branches = BranchRepository()  # 모든 서비스가 공유할 브랜치 상태임.

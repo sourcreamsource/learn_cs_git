@@ -70,32 +70,49 @@ class HistoryCommands:
     # ✅
     def handle_ancestors(self, args: list[str], options: dict[str, str]) -> None:  # 모든 조상을 조회함.
         commit_hash = InteractiveHandler.ask_ancestors(args)  # 대상 번호를 받음.
+
         if not commit_hash:  # 번호 입력이 취소되었는지 확인함.
             print("Invalid args: commit hash is required")  # 번호가 필요함을 알림.
             return  # 조회하지 않음.
+        
         success, ancestors, message = self._graph.get_ancestors(commit_hash)  # 부모 방향 탐색을 요청함.
+        
         if not success or ancestors is None:  # 알 수 없는 번호인지 확인함.
             print(message)  # 서비스의 오류를 알려 줌.
             return  # 잘못된 결과를 출력하지 않음.
+        
         show_ancestors(commit_hash, ancestors)  # 조상 목록 또는 뿌리 안내를 출력함.
 
 
 
     # ✅
     def handle_search(self, args: list[str], options: dict[str, str]) -> None:  # 작성자 또는 단어 색인을 선택함.
+        
+        # 1. author 옵션일 경우,
         if "author" in options:  # 작성자 검색 옵션이 있는 경우임.
             if args:  # 작성자와 단어를 동시에 지정하면 뜻이 모호함.
                 print("Invalid args: use a keyword or --author, not both")  # 검색 방식 하나만 선택하게 함.
                 return  # 모호한 검색을 실행하지 않음.
+            
             author = options["author"]  # 작성자 이름을 가져옴.
+            
             if not author.strip():  # 공백뿐인 이름은 거부함.
                 print("Invalid args: author name is required")  # 올바른 작성자 이름이 필요함을 알림.
                 return  # 빈 이름으로 검색하지 않음.
+            
             show_search_results(self._search.search_by_author(author))  # 작성자 색인의 결과를 출력함.
+            
             return  # 작성자 검색을 마침.
+
+
+        # 2. 일반
         keyword = InteractiveHandler.ask_search(args)  # 단어가 없으면 질문함.
+        
+        
         if not keyword or not keyword.strip():  # 빈 검색어인지 확인함.
             print("Invalid args: search keyword or --author=<name> is required")  # 필요한 검색값을 알려 줌.
             return  # 빈 검색어를 실행하지 않음.
+        
+        
         show_search_results(self._search.search_by_keyword(keyword))  # 단어 색인 결과를 출력함.
 

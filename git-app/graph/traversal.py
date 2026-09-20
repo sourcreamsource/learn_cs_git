@@ -7,6 +7,12 @@ from graph.topological_sort import topological_sort, topological_sort_with_prior
 
 # 여기저기 흩어진 그래프 탐색 기능들을 한곳에서 편하게 꺼내 쓰도록 모아둔 안내 데스크(허브) 클래스임.
 class GraphTraversal:
+    """분리된 그래프 함수를 정적 메서드로 제공하는 공통 호출 창구다.
+
+    LOG는 topological_sort, PATH는 bfs_shortest_path,
+    ANCESTORS는 get_ancestors로 연결한다. 여기서 알고리즘을 복제하지 않는다.
+    객체를 만들지 않고 GraphTraversal.함수명으로 호출할 수 있다.
+    """
     topological_sort = staticmethod(topological_sort)  # 커밋들을 부모-자식 순서대로 바르게 줄 세우는 정렬 함수를 연결함.
     topological_sort_with_priority = staticmethod(topological_sort_with_priority)  # 작성자 이름 등의 우선순위를 따져서 줄 세우는 정렬 함수를 연결함.
     bfs_shortest_path = staticmethod(bfs_shortest_path)  # 두 커밋 사이의 가장 가까운 지름길(최단 경로)을 찾는 함수를 연결함.

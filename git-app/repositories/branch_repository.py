@@ -4,6 +4,12 @@ from typing import Dict, Optional
 
 # 브랜치 목록, HEAD 포인터, 현재 사용자(작성자) 상태를 관리하는 저장소 클래스임
 class BranchRepository:
+    """브랜치 이름표, HEAD, 현재 작성자와 초기화 여부를 함께 보관한다.
+
+    브랜치 사전은 이름에서 최신 커밋 해시로 연결한다.
+    HEAD는 현재 브랜치 이름이며 커밋 객체 자체를 보관하지 않는다.
+    아직 커밋이 없는 브랜치의 값은 None이다.
+    """
     # 브랜치 및 저장소 상태를 초기 상태로 비워두는 생성자 함수임
     def __init__(self) -> None:
         # 브랜치 이름과 최신 커밋 해시를 매핑하는 딕셔너리임 (예: {"main": "a1b2c3"})
@@ -18,6 +24,13 @@ class BranchRepository:
     # 저장소를 초기화하고 기본 main 브랜치 및 사용자를 설정하는 함수임
     def initialize(self, author: str) -> None:
         # 모든 브랜치 데이터를 비움
+        """브랜치를 비우고 main, HEAD, 작성자를 다시 설정한다.
+
+        입력 author는 상위 서비스에서 검사한 사용자 이름이다.
+        main의 커밋은 None, HEAD는 main, 초기화 여부는 True가 된다.
+        커밋과 색인을 비우는 일은 GitService가 별도로 수행한다.
+        반환값은 None이다.
+        """
         self._branches.clear()
         # 기본 브랜치인 main을 생성하고 아직 커밋이 없으므로 None으로 둠
         self._branches["main"] = None
@@ -51,6 +64,11 @@ class BranchRepository:
     # HEAD 포인터를 다른 브랜치로 전환하는 함수임
     def set_head(self, branch_name: str) -> bool:
         # 전환하려는 브랜치가 존재하는지 검사함
+        """존재하는 브랜치로 HEAD만 옮기고 성공 여부를 반환한다.
+
+        없는 이름이면 False이며 상태를 바꾸지 않는다.
+        성공하면 True다. 커밋을 복사하거나 브랜치의 최신 해시를 바꾸지 않는다.
+        """
         if branch_name not in self._branches:
             # 브랜치가 없으면 실패(False)를 반환함
             return False

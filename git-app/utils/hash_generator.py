@@ -12,6 +12,11 @@ from typing import Callable, Optional
 
 # 해시 생성기 인터페이스를 정의하는 추상 클래스임
 class HashStrategy(ABC):
+    """커밋 식별자 후보를 만드는 방식의 공통 규약이다.
+
+    generate를 구현한 전략으로 카운터와 난수 방식을 교체한다.
+    후보 생성과 중복 검사는 다른 책임이며 전략만으로 유일성을 보장하지 않는다.
+    """
     # 새로운 해시 문자열을 생성하는 추상 메서드임
     @abstractmethod
     # 자식 클래스에서 반드시 구현해야 하는 해시 생성 함수임
@@ -22,6 +27,12 @@ class HashStrategy(ABC):
 
 # 1부터 숫자가 1씩 증가하는 카운터 기반 해시 생성기 클래스임 (테스트 및 재현성 우수)
 class CounterHashStrategy(HashStrategy):
+    """증가하는 정수를 16진수 식별자로 만드는 재현 가능한 전략이다.
+
+    새 객체에서 같은 순서로 호출하면 같은 번호가 나온다.
+    content는 번호 생성에 사용하지 않고 prefix는 번호 앞에 붙인다.
+    서로 다른 객체나 실행 사이의 중복까지 막지는 않는다.
+    """
     # 생성자 함수로 카운터 시작 값을 0으로 초기화함
     def __init__(self, prefix: str = ""):
         # 카운터 숫자를 0으로 설정함
@@ -41,6 +52,12 @@ class CounterHashStrategy(HashStrategy):
 
 # SHA-1(Secure Hash Algorithm 1)과 시간·난수로 식별자를 만듦. 암호화나 비밀키 생성용이 아님.
 class RandomShaHashStrategy(HashStrategy):
+    """내용·시각·난수로 SHA-1(Secure Hash Algorithm 1) 후보를 만든다.
+
+    같은 내용이어도 실행 시점과 난수에 따라 달라질 수 있다.
+    기본 6자리로 잘라 쓰므로 충돌할 수 있고 중복 검사가 따로 필요하다.
+    암호화, 비밀번호 보호, 비밀키 생성 용도로 사용하는 클래스가 아니다.
+    """
     # 해시 길이를 기본 6자리로 설정하는 생성자 함수임
     def __init__(self, length: int = 6):
         # SHA-1의 16진수 문자열 범위에서만 길이를 고르게 함.
@@ -68,6 +85,12 @@ class RandomShaHashStrategy(HashStrategy):
 
 # 전략 패턴을 적용하여 해시 생성 방식을 자유롭게 바꿀 수 있는 관리 클래스임
 class HashGenerator:
+    """식별자 생성 전략과 같은 객체의 발급 이력을 관리한다.
+
+    기본은 난수 전략이고 테스트에서는 카운터로 교체할 수 있다.
+    이름에 Generator가 있어도 yield로 값을 내보내는 파이썬 제너레이터는 아니다.
+    유일성 검사가 필요할 때는 next_hash가 아닌 next_unique_hash를 쓴다.
+    """
     # 기본 해시 전략을 난수/SHA 전략으로 지정하는 생성자 함수임
     def __init__(self, strategy: Optional[HashStrategy] = None):
         # 기본 난수 SHA 해시 전략을 먼저 준비함
@@ -84,16 +107,34 @@ class HashGenerator:
     # 현재 사용 중인 해시 전략을 다른 전략으로 교체하는 함수임 (카운터 <-> 난수 전환 가능)
     def set_strategy(self, strategy: HashStrategy) -> None:
         # 내부 전략 객체를 새로운 전략으로 변경함
+        """후보 생성 방식만 바꾸고 기존 발급 이력과 대체 카운터는 유지한다.
+
+        입력은 HashStrategy 구현 객체이고 반환값은 None이다.
+        전략 교체가 저장된 커밋 해시나 발급 이력을 초기화하지는 않는다.
+        """
         self._strategy = strategy
 
     # 설정된 전략을 사용해 새 해시를 생성하고 반환하는 함수임
     def next_hash(self, content: str = "") -> str:
         # 전략의 generate 함수를 호출하여 해시 결과를 얻고 반환함
+        """현재 전략으로 후보 문자열 하나를 만든다.
+
+        중복 검사나 발급 이력 등록은 하지 않는다.
+        실제 저장에 필요한 유일성 검사는 next_unique_hash가 담당한다.
+        """
         return self._strategy.generate(content)
 
     # 저장소의 존재 검사 함수를 받아 아직 없는 번호만 발급함.
     def next_unique_hash(self, content: str, exists: Callable[[str], bool]) -> str:
         # 난수 전략이 계속 충돌하더라도 무한히 기다리지 않음.
+        """세션 발급 이력과 저장소 양쪽에 없는 식별자를 찾아 반환한다.
+
+        content는 후보 재료, exists는 저장소에 번호가 있는지 검사하는 함수다.
+        후보를 최대 32번 검사하고 계속 충돌하면
+        c 접두사가 붙은 증가 카운터로 전환해 빈 번호를 찾는다.
+        발급 이력은 이 객체가 살아 있는 동안 유지되며 앱 재시작까지
+        영구 보존되거나 동시 실행 간 원자적으로 보호되는 것은 아니다.
+        """
         for attempt in range(32):
             # 설정된 전략에서 후보 번호를 받음.
             candidate = self.next_hash(content)

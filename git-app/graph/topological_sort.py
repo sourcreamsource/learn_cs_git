@@ -9,6 +9,13 @@ from models.commit import Commit  # 그래프의 커밋 자료형임.
 # ----------------------------------------------------------------------
 # 부모 수와 부모별 자식 목록을 한 번에 준비함.
 def _build_parent_links(commits: dict[str, Commit], ignore_missing: bool) -> tuple[dict[str, int], dict[str, list[str]]]:
+    """위상 정렬에 필요한 남은 부모 수와 부모별 자식 목록을 만든다.
+
+    입력 commits는 해시에서 Commit으로 연결되는 사전이다.
+    저장된 자식 → 부모 관계로부터 처리용 부모 → 자식
+    목록을 만든다. 반환값은 (남은 부모 수 사전, 자식 목록 사전)이다.
+    없는 부모는 ValueError이며 ignore_missing=True일 때만 제외한다.
+    """
     remaining = {}  # 커밋마다 아직 처리하지 않은 부모 수를 저장함.
     
     
@@ -42,6 +49,13 @@ def _build_parent_links(commits: dict[str, Commit], ignore_missing: bool) -> tup
 # ----------------------------------------------------------------------
 # 부모가 모두 처리된 후보 중 다음에 출력할 커밋 하나를 선택함.
 def _take_next(ready: deque[str], commits: dict[str, Commit], priority: Callable[[Commit], str] | None) -> str:
+    """부모 처리가 끝난 후보 중 다음 해시를 꺼낸다.
+
+    priority가 None이면 큐 맨 앞을 O(1)에 꺼낸다.
+    우선순위 함수가 있으면 준비된 후보만 비교한다.
+    같은 값이면 먼저 들어온 후보를 유지하며 한 번 선택에 O(R)이 든다.
+    R은 준비된 후보 수다. ready에서 선택한 해시를 제거하고 반환한다.
+    """
     if priority is None:  # 기본 LOG는 준비된 순서대로 처리함.
         return ready.popleft()  # 기본 위상 정렬의 큐 꺼내기는 O(1)임.
     
@@ -77,6 +91,20 @@ def topological_sort(                                       # 기본 호출은 �
 ) -> list[Commit]:                                          # 부모가 먼저 오는 커밋 목록을 반환함.
 
 
+    """Kahn 위상 정렬로 부모가 자식보다 먼저 오는 커밋 목록을 만든다.
+
+    부모 수가 0인 커밋을 큐에서 꺼내고,
+    그 자식의 남은 부모 수를 줄인다. 모두 0이 된 자식만 큐에 넣는다.
+    입력 commits의 전체 그래프를 대상으로 하며 원본 커밋은 수정하지 않는다.
+    없는 부모나 순환은 ValueError다. 빈 그래프의 결과는 빈 목록이다.
+    ignore_missing_parents=True는 외부 부모를 무시하고 내부 순환을 검사한다.
+
+    V는 커밋 수, E는 부모 연결 수다.
+    기본 시간·추가 공간은 O(V+E)다. priority_key를 주면 준비된
+    후보에서만 작은 값을 고르므로 부모 우선은 유지하지만 시간은
+    최악 O(V²+E)다. 키 계산·비교 비용을 상수로 보는 설명이다.
+    일반 작성자순 LOG의 병합 정렬과는 다른 기능이다.
+    """
     remaining, children = _build_parent_links(commits, ignore_missing_parents)  # 부모 조건을 준비함.
 
 
@@ -119,4 +147,11 @@ def topological_sort(                                       # 기본 호출은 �
 # ✅ 그냥 rapper
 # 기존 평가 연습 함수 이름으로 작성자 우선 위상 정렬을 호출함.
 def topological_sort_with_priority(commits: dict[str, Commit], priority_key_func: Callable[[Commit], str]) -> list[Commit]:
+    """부모 우선을 지키면서 준비된 후보의 우선순위로 위상 정렬한다.
+
+    priority_key_func는 Commit에서 비교 문자열을 꺼내는 함수다.
+    예를 들어 작성자를 기준으로 주어도 자식을 부모보다 먼저 내보내지 않는다.
+    결과와 예외는 topological_sort를 그대로 따른다.
+    현재 LOG --sort-by=author가 이 함수를 호출하는 것은 아니다.
+    """
     return topological_sort(commits, priority_key=priority_key_func)  # 후보 선택 기준만 달리하고 정렬 절차는 공유함.
