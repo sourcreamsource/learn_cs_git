@@ -1,0 +1,10 @@
+# 도커 컴포즈 서비스 설정
+services:
+  mini-git:
+    # 현재 디렉토리의 Dockerfile을 사용하여 이미지 빌드
+    build: .
+    # 생성될 컨테이너 이름
+    container_name: mini-git-app
+    # 터미널에서 대화형(REPL) 입력을 주고받을 수 있도록 설정
+    stdin_open: true
+    tty: true
