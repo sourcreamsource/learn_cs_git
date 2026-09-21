@@ -15,17 +15,17 @@ class HistoryCommands:
 
 
 
-    # ✅ 
+    # ✅ 🔥🔥🔥🔥🔥
     # 기본 또는 기준별 로그를 선택함.
     def handle_log(self, args: list[str], options: dict[str, str]) -> None:  
 
-        # 1. 정렬 옵션이 없는 경우
+        # 1. 🔥🔥🔥🔥🔥 정렬 옵션이 없는 경우
         if "sort-by" not in options:                        # 정렬 옵션이 없으면 부모 우선 로그임.    
             show_log(self._graph.get_topological_log())     # 🔥🔥🔥🔥🔥 위상정렬된 log를 브랜치 이름표와 함께 출력함.
             return                                          # 기본 로그 출력을 마침.
         
         
-        # 2. 옵션이 있다면!
+        # 2. 🔥🔥🔥🔥🔥 옵션이 있다면!
         success, commits, message = self._search.get_sorted_log(options["sort-by"])  # 날짜·작성자 정렬을 요청함.
         
         if not success or commits is None:                  # 잘못된 정렬 기준을 처리함.

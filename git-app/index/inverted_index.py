@@ -72,7 +72,7 @@ class InvertedIndex:
         return tokens
 
 
-    # ✅ 커밋 즉시 바로 키워드 및 작성자 역색인 추가
+    # ✅ 🔥 커밋 즉시 바로 키워드 및 작성자 역색인 추가
     # 새로운 커밋이 생성될 때 역색인에 즉시 등록하는 갱신 함수임 (평가항목 2, 3: 실시간 동기화)
     def add_commit(self, commit_hash: str, message: str, author: str) -> None:
         
@@ -108,7 +108,9 @@ class InvertedIndex:
                 self._keyword_index[token][commit_hash] = None
 
 
-    # ✅ ❤️ 키워드 역색인 검색
+
+    # ----------------------------------------------------------------------------
+    # ✅ ❤️ 🔥🔥🔥🔥🔥 키워드 역색인 검색
     # 단어 후보를 평균 O(1)에 찾고 결과 K개를 꺼내는 함수임
     def search_by_keyword(self, keyword: str) -> List[str]:
         # 검색어를 커밋 메시지와 같은 규칙으로 단어 목록으로 나눔
@@ -128,8 +130,10 @@ class InvertedIndex:
 
         # 첫 단어의 색인 목록을 후보로 가져옴
         first_token = query_tokens[0]
+        
         # 다음 단계에서 쓸 값을 계산하거나 꺼내 변수에 보관함.
         candidate_hashes = self._keyword_index.get(first_token, {})
+        
         # 후보가 적은 단어부터 확인하면 불필요한 검사가 줄어듦.
         for token in query_tokens:
             # 단어별 번호 사전을 가져옴.
@@ -165,6 +169,8 @@ class InvertedIndex:
         return matched_hashes
 
 
+
+    # ----------------------------------------------------------------------------
     # ✅ ❤️ 작성자 역색인 검색
     # 작성자 후보를 평균 O(1)에 찾고 K개 번호를 복사하는 함수임
     def search_by_author(self, author: str) -> List[str]:
